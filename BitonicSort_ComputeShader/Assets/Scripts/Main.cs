@@ -13,7 +13,6 @@ public class Main : MonoBehaviour
         public uint index;//一緒にソートされるindex
     }
 
-
     public ComputeShader shader;
     ComputeBuffer gpu_data;
     int kernel_ParallelBitonic_B16;
@@ -25,8 +24,7 @@ public class Main : MonoBehaviour
     mystruct[] host_data;
 
     //配列の要素数
-    int N = 1 << 21;//下限 1<<8,上限 1<<27
-
+    int N = 1 << 26;//下限 1<<8,上限 1<<27
 
     void kernelfindStart()
     {
@@ -39,6 +37,14 @@ public class Main : MonoBehaviour
     }
 
 
+    void Host_Init()
+    {
+        for (uint i = 0; i < N; i++)
+        {
+            host_data[i].key = UnityEngine.Random.Range(-2001.1f, 1.0f);
+            host_data[i].index = i;
+        }
+    }
     void Start()
     {
         host_data = new mystruct[N];//ソートしたいデータ
@@ -47,30 +53,19 @@ public class Main : MonoBehaviour
         //カーネル初期設定
         kernelfindStart();
 
-        for (uint i = 0; i < N; i++) 
-        {
-            host_data[i].key = UnityEngine.Random.Range(-2001.1f, 1.0f);
-            host_data[i].index = i;
-        }
+        //初期値代入at CPU
+        Host_Init();
+
         // host to device
         gpu_data.SetData(host_data);
 
-
         //ソート実装部分
-        var stm = Gettime();//start時間
         BitonicSort_fastest(gpu_data, N);
         gpu_data.GetData(host_data);
-        var etm = Gettime();//end時間
         Debug.Log("要素数=" + N);
-        Debug.Log("計算時間"+(etm - stm) +"ms");
 
         //結果表示
         resultDebug();
-
-        //fastest 1^28で1284ms
-        //faster 1^28で1428ms
-        //normal 1^28で2593ms
-
     }
 
 
@@ -160,8 +155,7 @@ public class Main : MonoBehaviour
 
 
 
-
-    void BitonicSort_faster(ComputeBuffer gpu_data, int n)
+    void BitonicSort_NoUseSharedMemory(ComputeBuffer gpu_data, int n)
     {
         //引数をセット
         shader.SetBuffer(kernel_ParallelBitonic_B16, "data", gpu_data);
@@ -215,9 +209,6 @@ public class Main : MonoBehaviour
 
 
 
-
-
-
     void BitonicSort_normal(ComputeBuffer gpu_data, int n)
     {
         //引数をセット
@@ -255,13 +246,6 @@ public class Main : MonoBehaviour
         }
     }
 
-
-    //現在の時刻をms単位で取得
-    int Gettime()
-    {
-        return DateTime.Now.Millisecond + DateTime.Now.Second * 1000
-         + DateTime.Now.Minute * 60 * 1000 + DateTime.Now.Hour * 60 * 60 * 1000;
-    }
 
     private void OnDestroy()
     {
