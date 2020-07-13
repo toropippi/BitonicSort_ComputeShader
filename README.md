@@ -1,6 +1,6 @@
 ## Introduction
 
-バイトニックソートのコンピュートシェーダー移植版
+バイトニックソートのコンピュートシェーダー移植版。
 indexとkeyを一緒にソートします
 
 
@@ -15,6 +15,7 @@ Sort index and key together.
 http://www.bealto.com/gpu-sorting_parallel-bitonic-1.html
 を参考にしました。
 
+自分のブログにもまとめています。(http://blog.livedoor.jp/toropippi/archives/54817221.html)
 
 
 ### Only B2
