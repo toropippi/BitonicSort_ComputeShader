@@ -22,9 +22,10 @@ public class Main : MonoBehaviour
     int kernel_ParallelBitonic_C4;
     int kernel_ParallelBitonic_C2;
     mystruct[] host_data;
+    const int THREADNUM_X = 64;
 
     //配列の要素数
-    int N = 1 << 26;//下限 1<<8,上限 1<<27
+    int N = 1 << 21;//下限 1<<8,上限 1<<27
 
     void kernelfindStart()
     {
@@ -45,6 +46,7 @@ public class Main : MonoBehaviour
             host_data[i].index = i;
         }
     }
+
     void Start()
     {
         host_data = new mystruct[N];//ソートしたいデータ
@@ -62,20 +64,10 @@ public class Main : MonoBehaviour
         //ソート実装部分
         BitonicSort_fastest(gpu_data, N);
         gpu_data.GetData(host_data);
-        Debug.Log("要素数=" + N);
 
         //結果表示
+        Debug.Log("要素数=" + N);
         resultDebug();
-    }
-
-
-    //引数セットとディスパッチ
-    void SortDispatch(int kernel_id, int groupnum, int inc = 0, int dir = 0, int inc0 = 0)
-    {
-        shader.SetInt("inc", inc);
-        shader.SetInt("dir", dir);
-        shader.SetInt("inc0", inc0);
-        shader.Dispatch(kernel_id, groupnum, 1, 1);
     }
 
     void BitonicSort_fastest(ComputeBuffer gpu_data,int n)
@@ -90,6 +82,7 @@ public class Main : MonoBehaviour
 
         int nlog = (int)(Mathf.Log(n, 2));
         int B_indx, lninc, inc = 0;
+        int kernel_id;
 
         for (int i = 0; i < nlog; i++)
         {
@@ -97,57 +90,51 @@ public class Main : MonoBehaviour
             for (int j = 0; j < i + 1; j++)
             {
                 inc = 1 << lninc;
-                if (inc <= 128) break;
+                if (inc <= 128) break;//あとはshared memory内におさまるので
 
                 if (lninc >= 11)
                 {
                     B_indx = 16;
-                    SortDispatch(kernel_ParallelBitonic_B16, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                    //pbb16(pcl.queue,[int(N / B_indx)],[min(int(N / B_indx), 256)], mem_a, np.uint32(inc * 2 / B_indx), np.uint32(2 << i))
+                    kernel_id = kernel_ParallelBitonic_B16;
                     lninc = lninc - 4;
                 }
                 else if (lninc >= 10)
                 {
                     B_indx = 8;
-                    SortDispatch(kernel_ParallelBitonic_B8, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                    //pbb8(pcl.queue,[int(N / B_indx)],[min(int(N / B_indx), 256)], mem_a, np.uint32(inc * 2 / B_indx), np.uint32(2 << i))
+                    kernel_id = kernel_ParallelBitonic_B8;
                     lninc = lninc - 3;
                 }
                 else if (lninc >= 9)
                 {
                     B_indx = 4;
-                    SortDispatch(kernel_ParallelBitonic_B4, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                    //pbb4(pcl.queue,[int(N / B_indx)],[min(int(N / B_indx), 256)], mem_a, np.uint32(inc * 2 / B_indx), np.uint32(2 << i))
+                    kernel_id = kernel_ParallelBitonic_B4;
                     lninc = lninc - 2;
                 }
                 else 
                 {
                     B_indx = 2;
-                    SortDispatch(kernel_ParallelBitonic_B2, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                    //pbb2(pcl.queue,[int(N/B_indx)],[min(int(N/B_indx),256)],mem_a,np.uint32(inc*2/B_indx),np.uint32(2 << i))
+                    kernel_id = kernel_ParallelBitonic_B2;
                     lninc = lninc - 1;
                 }
-                //inc=int(inc/B_indx)
+
+                shader.SetInt("inc", inc * 2 / B_indx);
+                shader.SetInt("dir", 2 << i);
+                shader.Dispatch(kernel_id, N / B_indx / THREADNUM_X, 1, 1);
+
             }
 
             //これ以降はshared memoryに収まりそうなサイズなので
             if ((inc == 8) | (inc == 32) | (inc == 128))
             {
-                SortDispatch(kernel_ParallelBitonic_C4, N / 4 / 64,
-                    0,
-                    2 << i,
-                    inc
-                    );
-                //pbc4(pcl.queue,[int(N/4)],[min(64,int(N/4))], mem_a, np.uint32(inc), np.uint32(2 << i))
+                shader.SetInt("inc0", inc);
+                shader.SetInt("dir", 2 << i);
+                shader.Dispatch(kernel_ParallelBitonic_C4, N / 4 / 64, 1, 1);
             }
             else 
             {
-                SortDispatch(kernel_ParallelBitonic_C2, N / 2 / 128,
-                       0,
-                       2 << i,
-                       inc
-                       );
-                //pbc2(pcl.queue,[int(N / 2)],[min(128, int(N / 2))], mem_a, np.uint32(inc), np.uint32(2 << i))
+                shader.SetInt("inc0", inc);
+                shader.SetInt("dir", 2 << i);
+                shader.Dispatch(kernel_ParallelBitonic_C2, N / 2 / 128, 1, 1);
             }
         }//ループの終わり
     }
@@ -165,6 +152,7 @@ public class Main : MonoBehaviour
 
         int nlog = (int)(Mathf.Log(n, 2));
         int B_indx, lninc, inc = 0;
+        int kernel_id;
 
         for (int i = 0; i < nlog; i++)
         {
@@ -174,37 +162,39 @@ public class Main : MonoBehaviour
                 if (lninc < 0) break;
                 inc = 1 << lninc;
 
-                if (lninc >= 3)
+                if ((lninc >= 3) & (nlog >= 10))
                 {
                     B_indx = 16;
-                    SortDispatch(kernel_ParallelBitonic_B16, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                    //pbb16(pcl.queue,[int(N / B_indx)],[min(int(N / B_indx), 256)], mem_a, np.uint32(inc * 2 / B_indx), np.uint32(2 << i))
+                    kernel_id = kernel_ParallelBitonic_B16;
                     lninc = lninc - 4;
                 }
-                else if (lninc >= 2)
+                else if ((lninc >= 2) & (nlog >= 9))
                 {
                     B_indx = 8;
-                    SortDispatch(kernel_ParallelBitonic_B8, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                    //pbb8(pcl.queue,[int(N / B_indx)],[min(int(N / B_indx), 256)], mem_a, np.uint32(inc * 2 / B_indx), np.uint32(2 << i))
+                    kernel_id = kernel_ParallelBitonic_B8;
                     lninc = lninc - 3;
                 }
-                else if (lninc >= 1)
+                else if ((lninc >= 1) & (nlog >= 8))
                 {
                     B_indx = 4;
-                    SortDispatch(kernel_ParallelBitonic_B4, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                    //pbb4(pcl.queue,[int(N / B_indx)],[min(int(N / B_indx), 256)], mem_a, np.uint32(inc * 2 / B_indx), np.uint32(2 << i))
+                    kernel_id = kernel_ParallelBitonic_B4;
                     lninc = lninc - 2;
                 }
                 else
                 {
                     B_indx = 2;
-                    SortDispatch(kernel_ParallelBitonic_B2, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                    //pbb2(pcl.queue,[int(N/B_indx)],[min(int(N/B_indx),256)],mem_a,np.uint32(inc*2/B_indx),np.uint32(2 << i))
+                    kernel_id = kernel_ParallelBitonic_B2;
                     lninc = lninc - 1;
                 }
+
+                shader.SetInt("inc", inc * 2 / B_indx);
+                shader.SetInt("dir", 2 << i);
+                shader.Dispatch(kernel_id, N / B_indx / THREADNUM_X, 1, 1);
+
             }
         }//ループの終わり
     }
+
 
 
 
@@ -224,8 +214,9 @@ public class Main : MonoBehaviour
             {
                 inc = 1 << lninc;
                 B_indx = 2;
-                SortDispatch(kernel_ParallelBitonic_B2, N / B_indx / 256, inc * 2 / B_indx, 2 << i);
-                //pbb2(pcl.queue,[int(N/B_indx)],[min(int(N/B_indx),256)],mem_a,np.uint32(inc*2/B_indx),np.uint32(2 << i))
+                shader.SetInt("inc", inc * 2 / B_indx);
+                shader.SetInt("dir", 2 << i);
+                shader.Dispatch(kernel_ParallelBitonic_B2, N / B_indx / THREADNUM_X, 1, 1);
                 lninc = lninc - 1;
             }
         }
@@ -238,12 +229,13 @@ public class Main : MonoBehaviour
     {
         // device to host
         gpu_data.GetData(host_data);
-
+        
         Debug.Log("GPU上でソートした結果");
         for (int i = 0; i < Mathf.Min(1024, N); i++)
         {
             Debug.Log("index="+host_data[i].index+" key=" +host_data[i].key);
         }
+        
     }
 
 

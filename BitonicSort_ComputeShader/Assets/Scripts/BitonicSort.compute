@@ -6,6 +6,7 @@
 #pragma kernel ParallelBitonic_C2
 
 
+#define THREADNUM_X 64
 //構造体と比較を自前で定義する必要あり。
 //構造体が128byteを超すと共有メモリが使えなくなる
 struct Mystruct
@@ -36,7 +37,7 @@ int inc;
 int inc0;
 int dir;
 
-[numthreads(256, 1, 1)]
+[numthreads(THREADNUM_X, 1, 1)]
 //void ParallelBitonic_B16(__global data_t* data, int inc, int dir)
 void ParallelBitonic_B16(uint threadid : SV_DispatchThreadID)
 {
@@ -56,7 +57,7 @@ void ParallelBitonic_B16(uint threadid : SV_DispatchThreadID)
 	for (int k = 0; k < 16; k++) data[k * inc + i] = x[k];
 }
 
-[numthreads(256, 1, 1)]
+[numthreads(THREADNUM_X, 1, 1)]
 //void ParallelBitonic_B8(__global data_t* data, int inc, int dir)
 void ParallelBitonic_B8(uint threadid : SV_DispatchThreadID)
 {
@@ -76,7 +77,7 @@ void ParallelBitonic_B8(uint threadid : SV_DispatchThreadID)
 	for (int k = 0; k < 8; k++) data[k * inc + i] = x[k];
 }
 
-[numthreads(256, 1, 1)]
+[numthreads(THREADNUM_X, 1, 1)]
 //void ParallelBitonic_B4(__global data_t* data, int inc, int dir)
 void ParallelBitonic_B4(uint threadid : SV_DispatchThreadID)
 {
@@ -104,7 +105,7 @@ void ParallelBitonic_B4(uint threadid : SV_DispatchThreadID)
 	data[3 * inc + i] = x3;
 }
 
-[numthreads(256, 1, 1)]
+[numthreads(THREADNUM_X, 1, 1)]
 //void ParallelBitonic_B2(__global data_t* data, int inc, int dir)
 void ParallelBitonic_B2(uint threadid : SV_DispatchThreadID)
 {
