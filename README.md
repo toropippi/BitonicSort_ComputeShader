@@ -1,7 +1,7 @@
 ## Introduction
 
 バイトニックソートのコンピュートシェーダー移植版。
-indexとkeyを一緒にソートします
+indexとkeyを一緒にソートします。
 
 
 Bitonic Sort implemented in ComputeShader.
