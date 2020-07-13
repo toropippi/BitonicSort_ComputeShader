@@ -1,8 +1,12 @@
 ## Introduction
-Bitonic Sort implemented in ComputeShader.
-Sort index and key together.
+
 バイトニックソートのコンピュートシェーダー移植版
 indexとkeyを一緒にソートします
+
+
+Bitonic Sort implemented in ComputeShader.
+Sort index and key together.
+
 
 
 ## 高速化
