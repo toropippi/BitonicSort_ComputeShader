@@ -11,9 +11,11 @@ indexとkeyを一緒にソートします
 http://www.bealto.com/gpu-sorting_parallel-bitonic-1.html
 を参考にしました。
 
+
 ### Only B2
 
 1threadあたり2箇所Load,Storeを行います。
+
 ![gpuimpliment1](https://user-images.githubusercontent.com/44022497/87314023-a8a16000-c55d-11ea-9353-6dd51890e7d6.png)
 
 一番標準的な実装です。実行時間(ms)の表です。
@@ -33,9 +35,11 @@ http://www.bealto.com/gpu-sorting_parallel-bitonic-1.html
 |67108864|818|
 |134217728|1744|
 
+
 ### B2C2
 
 Shared Memoryを使った高速化版です。
+
 ![shared1](https://user-images.githubusercontent.com/44022497/87314088-b8b93f80-c55d-11ea-8e55-df8c4850bfc5.png)
 
 青の部分はグローバルメモリへ書き込みをしないでShared memoryに書き込み使いまわしている部分です。
@@ -55,6 +59,7 @@ Shared Memoryを使った高速化版です。
 |33554432|382|236|
 |67108864|818|508|
 |134217728|1744|1095|
+
 
 ### B2B4B8B16C2C4
 
