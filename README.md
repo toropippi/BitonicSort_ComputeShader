@@ -16,6 +16,7 @@ http://www.bealto.com/gpu-sorting_parallel-bitonic-1.html
 を参考にしました。
 
 
+
 ### Only B2
 
 1threadあたり2箇所Load,Storeを行います。
@@ -38,6 +39,7 @@ http://www.bealto.com/gpu-sorting_parallel-bitonic-1.html
 |33554432|382|
 |67108864|818|
 |134217728|1744|
+
 
 
 ### B2C2
@@ -65,11 +67,13 @@ Shared Memoryを使った高速化版です。
 |134217728|1744|1095|
 
 
+
 ### B2B4B8B16C2C4
 
 1threadあたり4箇所Load,Storeを行うことでグローバルメモリのアクセス回数を減らします。
 ![gpuimpliment2](https://user-images.githubusercontent.com/44022497/87314155-c66ec500-c55d-11ea-9bd9-a8227274e079.png)
-これを8,16と増やすことでさらなる高速化ができました。
+
+これを8,16と増やすことでさらなる高速化ができます。
 Shared memory内も1threadあたり4箇所Load,Storeを行うことでShared memoryへのアクセス回数を減らします。
 
 |要素数/カーネル名|B2|B2C2|B2B4B8B16C2C4|
