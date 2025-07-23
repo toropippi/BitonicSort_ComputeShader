@@ -95,3 +95,4 @@ Shared memory内も1threadあたり4箇所Load,Storeを行うことでShared mem
 
 インストール後、`Samples~/Example` フォルダにあるサンプルシーンから使用例を確認できます。
 
+最終進化形だとここまで速くなります。最初と比べ3倍以上高速化できました！！わーい
