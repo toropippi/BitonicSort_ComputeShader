@@ -94,3 +94,9 @@ Shared memory内も1threadあたり4箇所Load,Storeを行うことでShared mem
 
 
 最終進化形だとここまで速くなります。最初と比べ3倍以上高速化できました！！わーい
+## Installation
+
+Add the following line to your `manifest.json` to install via GitHub:
+```json
+"com.toropippi.bitonicsort": "https://github.com/toropippi/BitonicSort_ComputeShader.git"
+```

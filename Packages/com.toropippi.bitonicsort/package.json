@@ -1,0 +1,10 @@
+{
+  "name": "com.toropippi.bitonicsort",
+  "version": "1.0.0",
+  "displayName": "Bitonic Sort Compute Shader",
+  "description": "Bitonic sort implementation using Unity compute shaders.",
+  "unity": "2019.4",
+  "author": {
+    "name": "toropippi"
+  }
+}
