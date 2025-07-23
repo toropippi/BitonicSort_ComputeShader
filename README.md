@@ -1,13 +1,10 @@
+# Bitonic Sort Compute Shader
+
 ## Introduction
 
-バイトニックソートのコンピュートシェーダー移植版。
-indexとkeyを一緒にソートします。
+バイトニックソートのコンピュートシェーダー移植版。indexとkeyを一緒にソートします。
 
-
-Bitonic Sort implemented in ComputeShader.
-Sort index and key together.
-
-
+Bitonic Sort implemented in ComputeShader. Sort index and key together.
 
 ## 高速化
 
@@ -16,7 +13,6 @@ http://www.bealto.com/gpu-sorting_parallel-bitonic-1.html
 を参考にしました。
 
 自分のブログにもまとめています。(http://blog.livedoor.jp/toropippi/archives/54817221.html)
-
 
 ### Only B2
 
@@ -40,8 +36,6 @@ http://www.bealto.com/gpu-sorting_parallel-bitonic-1.html
 |33554432|382|
 |67108864|818|
 |134217728|1744|
-
-
 
 ### B2C2
 
@@ -67,8 +61,6 @@ Shared Memoryを使った高速化版です。
 |67108864|818|508|
 |134217728|1744|1095|
 
-
-
 ### B2B4B8B16C2C4
 
 1threadあたり4箇所Load,Storeを行うことでグローバルメモリのアクセス回数を減らします。
@@ -92,5 +84,14 @@ Shared memory内も1threadあたり4箇所Load,Storeを行うことでShared mem
 |67108864|818|508|264|
 |134217728|1744|1095|552|
 
-
 最終進化形だとここまで速くなります。最初と比べ3倍以上高速化できました！！わーい
+
+## Installation
+
+このリポジトリをGit URLとして`manifest.json`に追加することでインストールできます。
+```json
+"com.toropippi.bitonicsort": "https://github.com/toropippi/BitonicSort_ComputeShader.git"
+```
+
+インストール後、`Samples~/Example` フォルダにあるサンプルシーンから使用例を確認できます。
+
